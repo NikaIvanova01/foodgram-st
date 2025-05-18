@@ -1,11 +1,50 @@
-version: '3.3'
-services:
+version: '3.8'
 
+services:
+  # PostgreSQL Database
+  db:
+    container_name: foodgram-db
+    image: postgres:14-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - ./.env
+    restart: always
+    networks:
+      - foodgram-network
+
+  # Django Backend
+  backend:
+    container_name: foodgram-back
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - static_value:/app/static/
+      - media_value:/app/media/
+      - ../data/:/app/data/
+    depends_on:
+      - db
+    env_file:
+      - ./.env
+    networks:
+      - foodgram-network
+
+  # React Frontend
   frontend:
     container_name: foodgram-front
-    build: ../frontend
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
     volumes:
       - ../frontend/:/app/result_build/
+    depends_on:
+      - backend
+    networks:
+      - foodgram-network
+
+  # Nginx Web Server
   nginx:
     container_name: foodgram-proxy
     image: nginx:1.25.4-alpine
@@ -15,3 +54,20 @@ services:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
+      - static_value:/var/html/static/
+      - media_value:/var/html/media/
+    depends_on:
+      - backend
+    restart: always
+    networks:
+      - foodgram-network
+
+volumes:
+  postgres_data:
+  static_value:
+  media_value:
+
+networks:
+  foodgram-network:
+    name: foodgram-network
+    driver: bridge
