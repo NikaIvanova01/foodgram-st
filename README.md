@@ -1,126 +1,121 @@
-# Foodgram - Продуктовый помощник
+# Foodgram - Your Recipe Management Platform
 
-![Foodgram Workflow](https://github.com/username/foodgram-project/actions/workflows/foodgram_workflow.yml/badge.svg)
+## Project Description
+Foodgram is a recipe management service where users can share recipes, follow other users, and create shopping lists from recipe ingredients.
 
-## Описание проекта
+## Technology Stack
+- Backend: Python/Django
+- Frontend: React
+- Database: PostgreSQL
+- Server: Nginx
+- Containerization: Docker
 
-"Фудграм" - это веб-приложение, которое позволяет пользователям публиковать рецепты, добавлять чужие рецепты в избранное, подписываться на других авторов и создавать список покупок для выбранных рецептов.
+## Project Structure
+```
+├── backend/          # Django backend application
+├── frontend/         # React frontend application
+├── infra/            # Infrastructure configuration files
+├── data/             # Initial data and fixtures
+└── docs/             # API documentation
+```
 
-## Функционал
+## Features
+- User authentication and authorization
+- Create, view, edit and delete recipes
+- Add recipes to favorites
+- Create shopping lists from recipes
+- Follow other users
+- Filter recipes by tags
 
-- Регистрация и авторизация пользователей
-- Создание, просмотр, редактирование и удаление рецептов
-- Фильтрация рецептов по тегам
-- Добавление рецептов в избранное
-- Подписка на авторов
-- Добавление рецептов в список покупок
-- Скачивание списка покупок в формате TXT
+## Docker Images
+The project's Docker images are available at:
+- Backend: `https://hub.docker.com/r/tirabock/foodgram-backend`
+- Frontend: `https://hub.docker.com/r/tirabock/foodgram-frontend`
 
-## Технологии
+You can pull these images directly instead of building them locally:
+```bash
+docker pull tirabock/foodgram-backend
+docker pull tirabock/foodgram-frontend
+```
 
-- **Backend**: Django, Django REST framework, Gunicorn
-- **Frontend**: React
-- **Database**: PostgreSQL
-- **Infrastructure**: Docker, Nginx
-- **CI/CD**: GitHub Actions
+To use these images in your docker-compose.yml, replace the build contexts with the image URLs:
+```yaml
+services:
+  backend:
+    image: <your-backend-image-url>
+    ...
 
-## Инструкция для ревьюера
+  frontend:
+    image: <your-frontend-image-url>
+    ...
+```
 
-### Предварительные требования
+## Environment Variables
+The project uses environment variables for configuration. Sample configuration files are provided in `.env.sample`:
 
-- Docker и Docker Compose
-- Git
+### Required Environment Variables:
+```bash
+# Debug mode (0 for production, 1 for development)
+DEBUG=0
 
-### Шаги по запуску проекта
+# Django secret key
+SECRET_KEY=django-insecure-token-yo
 
-1. Клонируйте репозиторий:
+# Allowed hosts for the application
+ALLOWED_HOSTS=127.0.0.1,backend,localhost,foodgram-backend
+
+# Database configuration
+DB_NAME=foodgram-db
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=foodgram-postgres
+DB_PORT=5432
+```
+
+To set up your environment:
+1. In thr project directory, copy the sample file:
+```bash
+cp infra/.env.sample infra/.env
+```
+2. Update the values in `.env` with your actual configuration
+
+## Installation and Setup
+
+### Prerequisites
+- Docker
+- Docker Compose
+
+### Development Setup
+1. Clone the repository
    ```bash
-   git clone https://github.com/username/foodgram-project.git
-   cd foodgram-project
+   git clone https://github.com/savlagood/foodgram-st.git
    ```
-
-2. Создайте файл `.env` в директории `infra/` со следующими переменными окружения:
-   ```
-   DB_ENGINE=django.db.backends.postgresql
-   DB_NAME=postgres
-   POSTGRES_USER=postgres
-   POSTGRES_PASSWORD=postgres
-   DB_HOST=db
-   DB_PORT=5432
-   SECRET_KEY=your-secret-key
-   DEBUG=False
-   ALLOWED_HOSTS=127.0.0.1,localhost
-   ```
-
-3. Запустите проект с помощью Docker Compose:
+2. Create environment files as described above
+3. Build and run the containers:
    ```bash
-   cd infra
-   docker-compose up -d
+   cd foodgram-st/infra
+   docker-compose up -d --build
+   ```
+4. Apply migrations:
+   ```bash
+   docker-compose exec backend python manage.py migrate
+   ```
+5. Load initial data:
+   ```bash
+   docker-compose exec backend python manage.py load_ingredients data/ingredients.json
+   ```
+6. Create superuser:
+   ```bash
+   docker-compose exec backend python manage.py createsuperuser
    ```
 
-4. После запуска контейнеров будут автоматически выполнены:
-   - Миграции базы данных
-   - Сбор статических файлов
-   - Загрузка ингредиентов в базу данных
+### API Documentation
+API documentation is available at [`/api/docs/`](http://127.0.0.1/api/docs/) after starting the project.
+You can find the OpenAPI schema in `docs/openapi-schema.yml`.
 
-5. Перейдите по адресу http://localhost для доступа к веб-интерфейсу.
+### Testing
+The project includes a Postman collection for API testing located in `postman_collection/foodgram.postman_collection.json`.
 
-### Доступ к API и документации
-
-- Документация API доступна по адресу http://localhost/api/docs/
-- API эндпоинты доступны по адресу http://localhost/api/
-
-### Учетные записи для тестирования
-
-По умолчанию доступен админ-аккаунт:
-- Email: admin@example.com
-- Пароль: admin
-
-### Управление контейнерами
-
-- Остановка контейнеров:
-  ```bash
-  docker-compose stop
-  ```
-
-- Удаление контейнеров:
-  ```bash
-  docker-compose down
-  ```
-
-### Резервное копирование базы данных
-
-Для создания резервной копии базы данных выполните:
-```bash
-docker-compose exec db pg_dump -U postgres postgres > backup_$(date +%Y-%m-%d_%H-%M-%S).sql
-```
-
-### Восстановление базы данных
-
-Для восстановления базы данных из резервной копии:
-```bash
-cat backup_file.sql | docker-compose exec -T db psql -U postgres postgres
-```
-
-## Сборка и отправка образа на Docker Hub
-
-Для отправки образа в свой Docker Hub репозиторий:
-```bash
-cd infra
-bash build_and_push.sh your_docker_username
-```
-
-## CI/CD
-
-Проект настроен для автоматического тестирования, сборки и деплоя с использованием GitHub Actions. При пуше в ветку main/master:
-1. Запускаются тесты
-2. Собирается Docker-образ и отправляется на Docker Hub
-3. Образ деплоится на сервер
-
-## Автор
-
-Your Name
-
-## Лицензия
-MIT
-
+## About Author
+- Иванова Вероника Петровна
+- НИУ МЭИ - ИВТИ - А-08-22

@@ -1,30 +1,11 @@
-# Используем официальный образ Python
-FROM python:3.12-slim
+FROM python:3.10-slim
 
-# Устанавливаем системные зависимости
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Копируем зависимости
-COPY requirements.txt /app/
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt .
 
-# Копируем проект
-COPY . .
+RUN pip install -r requirements.txt
 
-# Файлы media и static
-RUN mkdir -p /app/static /app/media && \
-    chmod -R 755 /app/static /app/media
+COPY ./foodgram/ .
 
-# entrypoint.sh
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
-
-EXPOSE 8000
-
-ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "foodgram.wsgi:application"]

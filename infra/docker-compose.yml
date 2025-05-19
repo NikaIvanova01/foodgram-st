@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3.3"
 
 services:
   frontend:
@@ -7,76 +7,76 @@ services:
     volumes:
       - ../frontend/:/app/result_build/
     networks:
-      - foodgram_net
-  nginx:
-    container_name: foodgram-proxy
-    image: nginx:1.25.4-alpine
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - ../frontend/build:/usr/share/nginx/html/
-      - ../docs/:/usr/share/nginx/html/api/docs/
-      - mediavol:/var/html/media/
-      - staticvol:/var/html/static/
-    networks:
-      - foodgram_net
+      - foodgram_network
 
-  # API
+  postgres:
+    container_name: foodgram-postgres
+    image: postgres:17
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - 5432:5432
+    volumes:
+      - .pgdata:/var/lib/postgresql/data
+    networks:
+      - foodgram_network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   backend:
     container_name: foodgram-backend
     build:
       context: ../backend/
       dockerfile: Dockerfile
+    restart: always
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
     environment:
       DEBUG: ${DEBUG}
       SECRET_KEY: ${SECRET_KEY}
-      DB_PORT: ${DB_PORT}
-      DB_HOST: ${DB_HOST}
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
-    restart: always
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
     ports:
       - 8000:8000
     networks:
-      - foodgram_net
+      - foodgram_network
     volumes:
-      - mediavol:/app/media/
-      - staticvol:/app/static/
+      - media_volume:/app/media/
+      - static_volume:/app/static/
 
-   # база данных для рецептов
-  db:
-    container_name: foodgram-recipe-app
-    image: postgres:16-alpine
+  nginx:
+    container_name: foodgram-proxy
+    image: nginx:1.25.4-alpine
     ports:
-      - 5433:5432
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      - 80:80
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ../frontend/build:/usr/share/nginx/html/
+      - ../docs/:/usr/share/nginx/html/api/docs/
+      - static_volume:/var/html/static/
+      - media_volume:/var/html/media/
     networks:
-      - foodgram_net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
+      - foodgram_network
+    depends_on:
+      - backend
 
 networks:
-  foodgram_net:
+  foodgram_network:
     driver: bridge
     ipam:
       config:
-        - subnet: 192.168.100.0/24
+        - subnet: 192.168.7.0/24
 
 volumes:
-  postgres-data:
-  mediavol:
-  staticvol:
+  media_volume:
+  static_volume:
