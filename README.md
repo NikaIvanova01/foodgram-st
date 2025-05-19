@@ -29,24 +29,24 @@ Foodgram is a recipe management service where users can share recipes, follow ot
 
 ## Docker Images
 The project's Docker images are available at:
-- Backend: `https://hub.docker.com/r/tirabock/foodgram-backend`
-- Frontend: `https://hub.docker.com/r/tirabock/foodgram-frontend`
+- Backend: `https://hub.docker.com/r/nikaivanova/foodgram-backend`
+- Frontend: `https://hub.docker.com/r/nikaivanova/foodgram-frontend`
 
 You can pull these images directly instead of building them locally:
 ```bash
-docker pull tirabock/foodgram-backend
-docker pull tirabock/foodgram-frontend
+docker pull nikaivanova/foodgram-backend:latest
+docker pull nikaivanova/foodgram-frontend:latest
 ```
 
-To use these images in your docker-compose.yml, replace the build contexts with the image URLs:
+Our docker-compose.yml already configured to use these images:
 ```yaml
 services:
-  backend:
-    image: <your-backend-image-url>
+  frontend:
+    image: nikaivanova/foodgram-frontend:latest
     ...
 
-  frontend:
-    image: <your-frontend-image-url>
+  backend:
+    image: nikaivanova/foodgram-backend:latest
     ...
 ```
 
@@ -91,10 +91,10 @@ cp infra/.env.sample infra/.env
    git clone https://github.com/savlagood/foodgram-st.git
    ```
 2. Create environment files as described above
-3. Build and run the containers:
+3. Run the containers with published images:
    ```bash
    cd foodgram-st/infra
-   docker-compose up -d --build
+   docker-compose up -d
    ```
 4. Apply migrations:
    ```bash
@@ -107,6 +107,35 @@ cp infra/.env.sample infra/.env
 6. Create superuser:
    ```bash
    docker-compose exec backend python manage.py createsuperuser
+   ```
+
+### Building and Publishing Docker Images
+If you want to build and publish your own Docker images:
+
+1. Make sure you're logged into Docker Hub:
+   ```bash
+   docker login
+   ```
+
+2. Build and push the images:
+   ```bash
+   docker build -t your-username/foodgram-frontend:latest ./frontend
+   docker push your-username/foodgram-frontend:latest
+
+   docker build -t your-username/foodgram-backend:latest ./backend
+   docker push your-username/foodgram-backend:latest
+   ```
+
+3. Update the docker-compose.yml to use your images:
+   ```yaml
+   services:
+     frontend:
+       image: your-username/foodgram-frontend:latest
+       ...
+
+     backend:
+       image: your-username/foodgram-backend:latest
+       ...
    ```
 
 ### API Documentation

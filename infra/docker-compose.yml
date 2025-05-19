@@ -3,7 +3,7 @@ version: "3.3"
 services:
   frontend:
     container_name: foodgram-front
-    build: ../frontend
+    image: nikaivanova/foodgram-frontend:latest
     volumes:
       - ../frontend/:/app/result_build/
     networks:
@@ -31,9 +31,7 @@ services:
 
   backend:
     container_name: foodgram-backend
-    build:
-      context: ../backend/
-      dockerfile: Dockerfile
+    image: nikaivanova/foodgram-backend:latest
     restart: always
     depends_on:
       postgres:
